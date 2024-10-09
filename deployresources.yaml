@@ -1,0 +1,63 @@
+Resources:
+# Deploy Bastion Server #########################################################
+  BastionServer:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t3.medium
+      ImageId: ami-0888db1202897905c
+      SubnetId: !ImportValue PublicSubnetVPC2BastionId
+      SecurityGroupIds:
+        - !ImportValue BastionSecurityGroupId
+      KeyName: vockey
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1  
+          Ebs:
+            VolumeSize: 50       
+            VolumeType: gp2      
+      Tags:
+        - Key: Name
+          Value: FinsecureBastion2
+
+#########################################################
+
+Outputs:
+
+  PublicBastionIp:
+    Description: Public IP address of the Bastion instance
+    Value: !GetAtt BastionServer.PublicIp
+
+
+
+#Auto Scaling group with notifications               ########################################################
+
+
+
+
+
+# ########################################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+#########################################################
+
+
+
+
+
+
+
+
+
+
+
+#########################################################
