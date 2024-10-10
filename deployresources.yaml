@@ -18,7 +18,73 @@ Resources:
         - Key: Name
           Value: FinsecureBastion2
 
-#########################################################
+# RDS Instance (MYSQL) in private subnet in vpc1 ########################################################
+  RDSInstance:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBInstanceClass: db.t3.micro 
+      AllocatedStorage: "20"
+      DBName: MyDatabase
+      Engine: MySQL
+      MasterUsername: admin 
+      MasterUserPassword: password123
+      VPCSecurityGroups:
+        #- !Ref DatabaseSecurityGroup   ##
+        - !ImportValue DatabaseSecurityGroupId
+      DBSubnetGroupName: !Ref RDSSubnetGroup
+      MultiAZ: true
+      PubliclyAccessible: false 
+      StorageType: "gp2"
+
+       # RDS subnet group ########################################################
+  RDSSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: "Private Subnet Group for RDS"
+      SubnetIds:
+        #- !Ref PrivateSubnetVPC1RDS01    ##
+        #- !Ref PrivateSubnetVPC1RDS02    ##
+        - !ImportValue Rds01PrivateSubnetId    ##
+        - !ImportValue Rds02PrivateSubnetId    ##
+
+# EC2 Instance for web server in vpc 2 ########################################################
+  WebServerInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t3.small
+      ImageId: ami-0a5c3558529277641
+      #SubnetId: !Ref PublicSubnetVPC2WebS01  #
+      SubnetId: !ImportValue WebServer02PublicSubnetVPC2Id
+      SecurityGroupIds:
+        #- !Ref WebServerSecurityGroup  #
+        - !ImportValue WebServerSecurityGroupId
+      KeyName: vockey
+      UserData:
+        Fn::Base64: |
+          #!/bin/bash
+          yum update -y 
+          yum install -y httpd php php-mysql
+          systemctl start httpd
+          systemctl enable httpd 
+          echo "<?php phpinfo(); ?>" > /var/www/html/index.php
+          echo "Web Server Connected to RDS!" > /var/www/html/index.html
+          # Test connectoon to RDS
+          echo "<?php
+          \$conn = new mysqli('DB_ENDPOINT', 'admin', 'password123', 'MyDatabase');
+          if (\$conn->connect_error) {
+            die('Connection failed: ' . \$conn->connect_error);
+          }
+          echo 'Connected SuccesFully to RDS!';
+          mysqli_close(\$conn);
+          ?>" > /var/www/html/db_test.php 
+
+
+
+
+
+
+
+######################################################## Outputs ########################################################
 
 Outputs:
 
@@ -26,9 +92,16 @@ Outputs:
     Description: Public IP address of the Bastion instance
     Value: !GetAtt BastionServer.PublicIp
 
+  RDSInstanceEndpoint:
+    Description: Endpoint of the RDS Instance
+    Value: !GetAtt RDSInstance.Endpoint.Address
+
+  WebServerPublicIp:
+    Description: Public IP address of the web server instance
+    Value: !GetAtt WebServerInstance.PublicIp
 
 
-#Auto Scaling group with notifications                  ########################################################
+##### Auto Scaling group ########################################################
 
 
 
