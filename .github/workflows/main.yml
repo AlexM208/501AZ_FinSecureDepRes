@@ -19,7 +19,7 @@ jobs:
       - name: Deploy Stack
         id: deploy_stack
         run: | 
-          aws cloudformation deploy --stack-name FinSecureResources --template-file deployresources.yaml
+          aws cloudformation deploy --stack-name FinSecureResources --template-file deployresources.yaml 
       - name: Echo Stack Outputs
         run: |
           # Parse the output values and print them
