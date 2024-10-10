@@ -18,6 +18,25 @@ Resources:
         - Key: Name
           Value: FinsecureBastion2
 
+# Deploy Bastion Server 2#########################################################
+  BastionServerDC1:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t3.medium
+      ImageId: ami-0888db1202897905c
+      SubnetId: !ImportValue DC01PrivateSubnetId
+      SecurityGroupIds:
+        - !ImportValue DC_SecurityGroupId
+      KeyName: vockey
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1  
+          Ebs:
+            VolumeSize: 50       
+            VolumeType: gp2      
+      Tags:
+        - Key: Name
+          Value: FinsecureBastionDC01Private
+
 # RDS Instance (MYSQL) in private subnet in vpc1 ########################################################
   RDSInstance:
     Type: AWS::RDS::DBInstance
