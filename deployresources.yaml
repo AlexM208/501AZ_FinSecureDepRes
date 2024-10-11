@@ -62,6 +62,7 @@ Resources:
         InstanceType: t3.small
         ImageId: ami-0a5c3558529277641
         KeyName: vockey
+        # SecurityGroupIds: !ImportValue WebServerSecurityGroupId
         NetworkInterfaces:
           - AssociatePublicIpAddress: true
             DeviceIndex: 0
