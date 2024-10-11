@@ -18,24 +18,7 @@ Resources:
         - Key: Name
           Value: FinsecureBastion2
 
-# Deploy Bastion Server 2#########################################################
-  BastionServerDC1:
-    Type: AWS::EC2::Instance
-    Properties:
-      InstanceType: t3.medium
-      ImageId: ami-0888db1202897905c
-      SubnetId: !ImportValue DC01PrivateSubnetId
-      SecurityGroupIds:
-        - !ImportValue DCSecurityGroupId
-      KeyName: vockey
-      BlockDeviceMappings:
-        - DeviceName: /dev/sda1  
-          Ebs:
-            VolumeSize: 50       
-            VolumeType: gp2      
-      Tags:
-        - Key: Name
-          Value: FinsecureBastionDC01Private
+
 
 # RDS Instance (MYSQL) in private subnet in vpc1 ########################################################
   RDSInstance:
@@ -66,36 +49,117 @@ Resources:
         - !ImportValue Rds01PrivateSubnetId    ##
         - !ImportValue Rds02PrivateSubnetId    ##
 
-# EC2 Instance for web server in vpc 2 ########################################################
-  WebServerInstance:
-    Type: AWS::EC2::Instance
+
+# Launch template for web servers ######################################33
+
+  webServersFinsecureTemplate:
+    Type: AWS::EC2::LaunchTemplate
     Properties:
-      InstanceType: t3.small
-      ImageId: ami-0a5c3558529277641
-      #SubnetId: !Ref PublicSubnetVPC2WebS01  #
-      SubnetId: !ImportValue WebServer02PublicSubnetVPC2Id
-      SecurityGroupIds:
-        #- !Ref WebServerSecurityGroup  #
+      LaunchTemplateName: webServersFinsecureTemplate
+      LaunchTemplateData: 
+        InstanceType: t3.small
+        ImageId: ami-0a5c3558529277641
+        SecurityGroupIds:
+          - !ImportValue WebServerSecurityGroupId
+        KeyName: vockey
+        NetworkInterfaces:
+          - AssociatePublicIpAddress: true
+            DeviceIndex: 0
+        UserData:
+          Fn::Base64: |
+            #!/bin/bash
+            yum update -y 
+            yum install -y httpd php php-mysql
+            systemctl start httpd
+            systemctl enable httpd 
+            echo "<?php phpinfo(); ?>" > /var/www/html/index.php
+            echo "Web Server Connected to RDS!" > /var/www/html/index.html
+            # Test connectoon to RDS
+            echo "<?php
+            \$conn = new mysqli('DB_ENDPOINT', 'admin', 'password123', 'MyDatabase');
+            if (\$conn->connect_error) {
+              die('Connection failed: ' . \$conn->connect_error);
+            }
+            echo 'Connected SuccesFully to RDS!';
+            mysqli_close(\$conn);
+            ?>" > /var/www/html/db_test.php 
+          BlockDeviceMappings:
+            - DeviceName: /dev/sda1
+              Ebs:
+                VolumeSize: 20
+                VolumeType: gp2
+
+
+# Auto Scaling group ############################################33
+
+  WebServerASG:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      VPCZoneIdentifier:
+        - !ImportValue WebServer01PublicSubnetVPC2Id
+        - !ImportValue WebServer02PublicSubnetVPC2Id
+        - !ImportValue WebServer03PublicSubnetVPC2Id
+        - !ImportValue WebServer04PublicSubnetVPC2Id
+      LaunchTemplate:
+        LaunchTemplateId: !Ref webServersFinsecureTemplate
+        Version: !GetAtt webServersFinsecureTemplate.LatestVersionNumber
+      MinSize: 2
+      MaxSize: 3
+      DesiredCapacity: 2
+      TargetGroupARNs:
+        - !Ref WebServerTargetGroup
+
+# Target group ############################################
+
+  WebServerTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckIntervalSeconds: 30
+      HealthCheckPath: /
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 5
+      UnhealthyThresholdCount: 2
+      Matcher:
+        HttpCode: 200
+      Port: 80
+      Protocol: HTTP
+      VpcId: !ImportValue VPC2Id
+      TargetType: instance
+
+# Application load balancer ############################3
+
+  WebServerLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: WebServerALB
+      Scheme: internet-facing
+      Subnets:
+        - !ImportValue WebServer01PublicSubnetVPC2Id
+        - !ImportValue WebServer02PublicSubnetVPC2Id
+        - !ImportValue WebServer03PublicSubnetVPC2Id
+        - !ImportValue WebServer04PublicSubnetVPC2Id
+      SecurityGroups:
         - !ImportValue WebServerSecurityGroupId
-      KeyName: vockey
-      UserData:
-        Fn::Base64: |
-          #!/bin/bash
-          yum update -y 
-          yum install -y httpd php php-mysql
-          systemctl start httpd
-          systemctl enable httpd 
-          echo "<?php phpinfo(); ?>" > /var/www/html/index.php
-          echo "Web Server Connected to RDS!" > /var/www/html/index.html
-          # Test connectoon to RDS
-          echo "<?php
-          \$conn = new mysqli('DB_ENDPOINT', 'admin', 'password123', 'MyDatabase');
-          if (\$conn->connect_error) {
-            die('Connection failed: ' . \$conn->connect_error);
-          }
-          echo 'Connected SuccesFully to RDS!';
-          mysqli_close(\$conn);
-          ?>" > /var/www/html/db_test.php 
+      LoadBalancerAttributes:
+        - Key: idle_timeout.timeout_seconds
+          Value: '60'
+    
+  WebServerListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref WebServerTargetGroup
+      LoadBalancerArn: !Ref WebServerLoadBalancer
+      Port: 80
+      Protocol: HTTP
+
+
+
+
+
+
 
 
 
@@ -115,10 +179,11 @@ Outputs:
     Description: Endpoint of the RDS Instance
     Value: !GetAtt RDSInstance.Endpoint.Address
 
-  WebServerPublicIp:
-    Description: Public IP address of the web server instance
-    Value: !GetAtt WebServerInstance.PublicIp
 
+
+  WebServerLoadBalancerDNS:
+    Description: DNS name of the Load Balancer for Web Servers
+    Value: !GetAtt WebServerLoadBalancer.DNSName
 
 ##### Auto Scaling group ########################################################
 
