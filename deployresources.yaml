@@ -52,6 +52,8 @@ Resources:
 
 # Launch template for web servers ######################################33
 
+
+
   webServersFinsecureTemplate:
     Type: AWS::EC2::LaunchTemplate
     Properties:
@@ -66,7 +68,7 @@ Resources:
           - AssociatePublicIpAddress: true
             DeviceIndex: 0
         UserData:
-          Fn::Base64: |
+          Fn::Base64: !Sub |
             #!/bin/bash
             yum update -y 
             yum install -y httpd php php-mysql
@@ -74,20 +76,20 @@ Resources:
             systemctl enable httpd 
             echo "<?php phpinfo(); ?>" > /var/www/html/index.php
             echo "Web Server Connected to RDS!" > /var/www/html/index.html
-            # Test connectoon to RDS
+            # Test connection to RDS
             echo "<?php
             \$conn = new mysqli('DB_ENDPOINT', 'admin', 'password123', 'MyDatabase');
             if (\$conn->connect_error) {
               die('Connection failed: ' . \$conn->connect_error);
             }
-            echo 'Connected SuccesFully to RDS!';
+            echo 'Connected Successfully to RDS!';
             mysqli_close(\$conn);
             ?>" > /var/www/html/db_test.php 
-          BlockDeviceMappings:
-            - DeviceName: /dev/sda1
-              Ebs:
-                VolumeSize: 20
-                VolumeType: gp2
+        BlockDeviceMappings:
+          - DeviceName: /dev/sda1
+            Ebs:
+              VolumeSize: 20
+              VolumeType: gp2
 
 
 # Auto Scaling group ############################################33
