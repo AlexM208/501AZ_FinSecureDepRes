@@ -61,12 +61,12 @@ Resources:
       LaunchTemplateData: 
         InstanceType: t3.small
         ImageId: ami-0a5c3558529277641
-        SecurityGroupIds:
-          - !ImportValue WebServerSecurityGroupId
         KeyName: vockey
         NetworkInterfaces:
           - AssociatePublicIpAddress: true
             DeviceIndex: 0
+            Groups:
+              - !ImportValue WebServerSecurityGroupId 
         UserData:
           Fn::Base64: !Sub |
             #!/bin/bash
