@@ -20,34 +20,6 @@ Resources:
 
 
 
-# RDS Instance (MYSQL) in private subnet in vpc1 ########################################################
-  RDSInstance:
-    Type: AWS::RDS::DBInstance
-    Properties:
-      DBInstanceClass: db.t3.micro 
-      AllocatedStorage: "20"
-      DBName: MyDatabase
-      Engine: MySQL
-      MasterUsername: admin 
-      MasterUserPassword: password123
-      VPCSecurityGroups:
-        #- !Ref DatabaseSecurityGroup   ##
-        - !ImportValue DatabaseSecurityGroupId
-      DBSubnetGroupName: !Ref RDSSubnetGroup
-      MultiAZ: true
-      PubliclyAccessible: false 
-      StorageType: "gp2"
-
-       # RDS subnet group ########################################################
-  RDSSubnetGroup:
-    Type: AWS::RDS::DBSubnetGroup
-    Properties:
-      DBSubnetGroupDescription: "Private Subnet Group for RDS"
-      SubnetIds:
-        #- !Ref PrivateSubnetVPC1RDS01    ##
-        #- !Ref PrivateSubnetVPC1RDS02    ##
-        - !ImportValue Rds01PrivateSubnetId    ##
-        - !ImportValue Rds02PrivateSubnetId    ##
 
 
 # Launch template for web servers ######################################33
@@ -79,11 +51,20 @@ Resources:
             echo "Web Server Connected to RDS!" > /var/www/html/index.html
             # Test connection to RDS
             echo "<?php
-            \$conn = new mysqli('DB_ENDPOINT', 'admin', 'password123', 'MyDatabase');
+            \$conn = new mysqli('${RdsEndpointExport}', 'admin', 'password123', 'MyDatabase');
             if (\$conn->connect_error) {
               die('Connection failed: ' . \$conn->connect_error);
             }
             echo 'Connected Successfully to RDS!';
+            \$sql = 'SHOW TABLES';
+            \$result = \$conn->query(\$sql);
+            if (\$result->num_rows > 0) {
+              while (\$row = \$result->fetch_assoc()) {
+                echo 'Table: ' . \$row['Tables_in_MyDatabase'] . '<br>';
+              }
+            } else {
+              echo 'No tables found in the database.';
+            }            
             mysqli_close(\$conn);
             ?>" > /var/www/html/db_test.php 
         BlockDeviceMappings:
@@ -178,9 +159,7 @@ Outputs:
     Description: Public IP address of the Bastion instance
     Value: !GetAtt BastionServer.PublicIp
 
-  RDSInstanceEndpoint:
-    Description: Endpoint of the RDS Instance
-    Value: !GetAtt RDSInstance.Endpoint.Address
+
 
 
 
