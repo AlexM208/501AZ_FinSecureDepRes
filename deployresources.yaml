@@ -51,7 +51,7 @@ Resources:
             echo "Web Server Connected to RDS!" > /var/www/html/index.html
             # Test connection to RDS
             echo "<?php
-            \$conn = new mysqli('${RdsEndpointExport}', 'admin', 'password123', 'MyDatabase');
+            \$conn = new mysqli('${!ImportValue RdsEndpointExport}', 'admin', 'password123', 'MyDatabase');
             if (\$conn->connect_error) {
               die('Connection failed: ' . \$conn->connect_error);
             }
