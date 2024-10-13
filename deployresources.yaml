@@ -34,7 +34,6 @@ Resources:
         InstanceType: t3.small
         ImageId: ami-0a5c3558529277641
         KeyName: vockey
-        # SecurityGroupIds: !ImportValue WebServerSecurityGroupId
         NetworkInterfaces:
           - AssociatePublicIpAddress: true
             DeviceIndex: 0
@@ -55,23 +54,28 @@ Resources:
             if (\$conn->connect_error) {
               die('Connection failed: ' . \$conn->connect_error);
             }
-            echo 'Connected Successfully to RDS!';
-            \$sql = 'SHOW TABLES';
+            echo 'Connected Successfully to RDS!<br>';
+          
+            // Query the specific table
+            \$sql = 'SELECT * FROM Finsecure'; // Change this to match your actual table structure
             \$result = \$conn->query(\$sql);
-            if (\$result->num_rows > 0) {
+          
+            if (\$result && \$result->num_rows > 0) {
               while (\$row = \$result->fetch_assoc()) {
-                echo 'Table: ' . \$row['Tables_in_MyDatabase'] . '<br>';
+                // Change the following line to reflect the actual columns in the Finsecure table
+                echo 'Data: ' . \$row['column_name1'] . ' - ' . \$row['column_name2'] . '<br>'; // Replace column_name1 and column_name2 with actual column names
               }
             } else {
-              echo 'No tables found in the database.';
+              echo 'No records found in the Finsecure table.';
             }            
-            mysqli_close(\$conn);
+            \$conn->close();
             ?>" > /var/www/html/db_test.php 
         BlockDeviceMappings:
           - DeviceName: /dev/sda1
             Ebs:
               VolumeSize: 20
               VolumeType: gp2
+
 
 
 # Auto Scaling group ############################################33
