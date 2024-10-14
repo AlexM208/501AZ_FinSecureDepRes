@@ -46,35 +46,15 @@ Resources:
             yum install -y httpd php php-mysql
             systemctl start httpd
             systemctl enable httpd 
-            echo "<?php phpinfo(); ?>" > /var/www/html/index.php
-            echo "Web Server Connected to RDS!" > /var/www/html/index.html
-            # Test connection to RDS
-            echo "<?php
-            \$conn = new mysqli('${!ImportValue RdsEndpointExport}', 'admin', 'password123', 'MyDatabase');
-            if (\$conn->connect_error) {
-              die('Connection failed: ' . \$conn->connect_error);
-            }
-            echo 'Connected Successfully to RDS!<br>';
-            // Query the table
-            \$sql = 'SELECT * FROM Finsecure';
-            \$result = \$conn->query(\$sql);
-            if (\$result && \$result->num_rows > 0) {
-              while (\$row = \$result->fetch_assoc()) {
-                // Change the following line to reflect the actual columns in the Finsecure table
-                echo 'Data: ' . \$row['column_name1'] . ' - ' . \$row['column_name2'] . '<br>'; // Replace column_name1 and column_name2 with actual column names
-              }
-            } else {
-              echo 'No records found in the Finsecure table.';
-            }            
-            \$conn->close();
-            ?>" > /var/www/html/db_test.php 
         BlockDeviceMappings:
           - DeviceName: /dev/sda1
             Ebs:
               VolumeSize: 20
               VolumeType: gp2
 
-
+            #git clone ////repo
+            #cd repo
+            #cp filename destination    ../../../var/www/html/
 
 # Auto Scaling group ############################################33
 
