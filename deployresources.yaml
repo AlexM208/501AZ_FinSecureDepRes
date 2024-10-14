@@ -1,10 +1,4 @@
 Resources:
-
-#RDS enpoint import
-  RdsEndpointImport:
-    Type: String
-    Description: "RDS Endpoint Address"
-    Default: !ImportValue RdsEndpointExport
 # Deploy Bastion Server #########################################################
   BastionServer:
     Type: AWS::EC2::Instance
@@ -53,7 +47,7 @@ Resources:
             # Create PHP file with database connection
             cat <<EOF > /var/www/html/PDOFsecure.php
             <?php
-            \$servername = "${RdsEndpointImport}";
+            \$servername = "${!ImportValue RdsEndpointExport}";
             \$username = "admin";
             \$password = "password123";
             \$dbname = "MyDatabase";
@@ -76,7 +70,7 @@ Resources:
                 \$stmt->setFetchMode(PDO::FETCH_ASSOC);
 
                 if (\$stmt->rowCount() > 0) {
-                    echo "<table border='1'><tr><th>ID</th><th>ID</th><th>Name</th></tr>";
+                    echo "<table border='1'><tr><th>ID</th><th>Name</th></tr>";
                     foreach (\$stmt->fetchAll() as \$row) {
                         echo "<tr><td>" . \$row['id'] . "</td><td>" . \$row['name'] . "</td></tr>";
                     }
@@ -92,6 +86,7 @@ Resources:
             \$conn = null;
             ?>
             EOF
+
 
 
 # Auto Scaling group ############################################
@@ -162,14 +157,6 @@ Resources:
 
 
 
-
-
-
-
-
-
-
-
 ######################################################## Outputs  ########################################################
 
 Outputs:
@@ -186,36 +173,3 @@ Outputs:
     Description: DNS name of the Load Balancer for Web Servers
     Value: !GetAtt WebServerLoadBalancer.DNSName
 
-##### Auto Scaling group ########################################################
-
-
-
-
-
-# ########################################################
-
-
-
-
-
-
-
-
-
-
-
-
-
-#########################################################
-
-
-
-
-
-
-
-
-
-
-
-#########################################################
