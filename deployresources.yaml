@@ -42,10 +42,16 @@ Resources:
         UserData:
           Fn::Base64: !Sub |
             #!/bin/bash
-            yum update -y 
-            yum install -y httpd php php-mysql
-            systemctl start httpd
-            systemctl enable httpd 
+            apt update -y
+            apt install apache2
+            apt install php8.3
+            apt-get install -y php8.3-cli php8.3-common php8.3-mysql php8.3-zip php8.3-gd php8.3-mbstring php8.3-curl php8.3-xml php8.3-bcmath
+            apt install git
+            systemctl start apache2
+            systemctl enable apache2 
+            git clone https://github.com/AlexM208/501AZ_FsecurePhpServerCode.git
+            cd 501AZ_FsecurePhpServerCode/
+            cp PDOFsecure.php ../../../var/www/html/
         BlockDeviceMappings:
           - DeviceName: /dev/sda1
             Ebs:
