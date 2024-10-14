@@ -47,7 +47,7 @@ Resources:
             # Create PHP file with database connection
             cat <<EOF > /var/www/html/PDOFsecure.php
             <?php
-            \$servername = "finsecureinfrastructure-rdsinstance-cfhlq1cwkbgg.cu7rraq7soxm.us-east-1.rds.amazonaws.com";
+            \$servername = "${!ImportValue RdsEndpointExport}";
             \$username = "admin";
             \$password = "password123";
             \$dbname = "MyDatabase";
