@@ -32,7 +32,7 @@ Resources:
       LaunchTemplateName: webServersFinsecureTemplate
       LaunchTemplateData: 
         InstanceType: t3.small
-        ImageId: ami-0a5c3558529277641
+        ImageId: ami-0866a3c8686eaeeba
         KeyName: vockey
         NetworkInterfaces:
           - AssociatePublicIpAddress: true
@@ -75,9 +75,9 @@ Resources:
       LaunchTemplate:
         LaunchTemplateId: !Ref webServersFinsecureTemplate
         Version: !GetAtt webServersFinsecureTemplate.LatestVersionNumber
-      MinSize: 2
+      MinSize: 1
       MaxSize: 3
-      DesiredCapacity: 2
+      DesiredCapacity: 1
       TargetGroupARNs:
         - !Ref WebServerTargetGroup
 
