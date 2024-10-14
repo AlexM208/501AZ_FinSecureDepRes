@@ -47,7 +47,7 @@ Resources:
             # Create PHP file with database connection
             cat <<EOF > /var/www/html/PDOFsecure.php
             <?php
-            \$servername = "${!ImportValue RdsEndpointExport}";
+            \$servername = "${RdsEndpointImport}";
             \$username = "admin";
             \$password = "password123";
             \$dbname = "MyDatabase";
@@ -153,8 +153,12 @@ Resources:
       Port: 80
       Protocol: HTTP
 
-
-
+Parameters:
+#RDS enpoint import
+  RdsEndpointImport:
+    Type: String
+    Description: "RDS Endpoint Address"
+    Default: !ImportValue RdsEndpointExport
 
 
 ######################################################## Outputs  ########################################################
