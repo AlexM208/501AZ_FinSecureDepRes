@@ -1,4 +1,10 @@
 Resources:
+
+#RDS enpoint import
+  RdsEndpointImport:
+    Type: String
+    Description: "RDS Endpoint Address"
+    Default: !ImportValue RdsEndpointExport
 # Deploy Bastion Server #########################################################
   BastionServer:
     Type: AWS::EC2::Instance
@@ -47,7 +53,7 @@ Resources:
             # Create PHP file with database connection
             cat <<EOF > /var/www/html/PDOFsecure.php
             <?php
-            \$servername = "${!ImportValue RdsEndpointExport}";
+            \$servername = "${RdsEndpointImport}";
             \$username = "admin";
             \$password = "password123";
             \$dbname = "MyDatabase";
@@ -58,7 +64,7 @@ Resources:
                 \$conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
                 // SQL query
-                \$sql = "SELECT * FROM Finsecure";  // Adjust based on your table structure
+                \$sql = "SELECT * FROM Finsecure"; 
 
                 // Prepare the SQL statement
                 \$stmt = \$conn->prepare(\$sql);
