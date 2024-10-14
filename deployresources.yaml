@@ -55,11 +55,9 @@ Resources:
               die('Connection failed: ' . \$conn->connect_error);
             }
             echo 'Connected Successfully to RDS!<br>';
-          
-            // Query the specific table
-            \$sql = 'SELECT * FROM Finsecure'; // Change this to match your actual table structure
+            // Query the table
+            \$sql = 'SELECT * FROM Finsecure';
             \$result = \$conn->query(\$sql);
-          
             if (\$result && \$result->num_rows > 0) {
               while (\$row = \$result->fetch_assoc()) {
                 // Change the following line to reflect the actual columns in the Finsecure table
