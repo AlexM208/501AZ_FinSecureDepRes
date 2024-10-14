@@ -3,7 +3,7 @@ Resources:
   BastionServer:
     Type: AWS::EC2::Instance
     Properties:
-      InstanceType: t3.medium
+      InstanceType: t3.small
       ImageId: ami-0888db1202897905c
       SubnetId: !ImportValue PublicSubnetVPC2BastionId
       SecurityGroupIds:
@@ -19,13 +19,7 @@ Resources:
           Value: FinsecureBastion2
 
 
-
-
-
 # Launch template for web servers ######################################33
-
-
-
   webServersFinsecureTemplate:
     Type: AWS::EC2::LaunchTemplate
     Properties:
@@ -47,23 +41,54 @@ Resources:
             apt install php8.3 -y
             apt-get install -y php8.3-cli php8.3-common php8.3-mysql php8.3-zip php8.3-gd php8.3-mbstring php8.3-curl php8.3-xml php8.3-bcmath -y
             apt install git -y
-            systemctl start apache2 -y
-            systemctl enable apache2 -y
-            git clone https://github.com/AlexM208/501AZ_FsecurePhpServerCode.git
-            cd 501AZ_FsecurePhpServerCode/
-            cp PDOFsecure.php ../../../var/www/html/
-        BlockDeviceMappings:
-          - DeviceName: /dev/sda1
-            Ebs:
-              VolumeSize: 20
-              VolumeType: gp2
+            systemctl start apache2
+            systemctl enable apache2
+            
+            # Create PHP file with database connection
+            cat <<EOF > /var/www/html/PDOFsecure.php
+            <?php
+            \$servername = "finsecureinfrastructure-rdsinstance-cfhlq1cwkbgg.cu7rraq7soxm.us-east-1.rds.amazonaws.com";
+            \$username = "admin";
+            \$password = "password123";
+            \$dbname = "MyDatabase";
 
-            #git clone ////repo
-            #cd repo
-            #cp filename destination    ../../../var/www/html/
+            try {
+                // Create a PDO connection
+                \$conn = new PDO("mysql:host=\$servername;dbname=\$dbname", \$username, \$password);
+                \$conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-# Auto Scaling group ############################################33
+                // SQL query
+                \$sql = "SELECT * FROM Finsecure";  // Adjust based on your table structure
 
+                // Prepare the SQL statement
+                \$stmt = \$conn->prepare(\$sql);
+
+                // Execute the statement
+                \$stmt->execute();
+
+                // Fetch results as an associative array
+                \$stmt->setFetchMode(PDO::FETCH_ASSOC);
+
+                if (\$stmt->rowCount() > 0) {
+                    echo "<table border='1'><tr><th>ID</th><th>ID</th><th>Name</th></tr>";
+                    foreach (\$stmt->fetchAll() as \$row) {
+                        echo "<tr><td>" . \$row['id'] . "</td><td>" . \$row['name'] . "</td></tr>";
+                    }
+                    echo "</table>";
+                } else {
+                    echo "0 results";
+                }
+            } catch (PDOException \$e) {
+                echo "Connection failed: " . \$e->getMessage();
+            }
+
+            // Close the connection
+            \$conn = null;
+            ?>
+            EOF
+
+
+# Auto Scaling group ############################################
   WebServerASG:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
@@ -81,8 +106,8 @@ Resources:
       TargetGroupARNs:
         - !Ref WebServerTargetGroup
 
-# Target group ############################################
 
+# Target group ############################################
   WebServerTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
@@ -99,8 +124,8 @@ Resources:
       VpcId: !ImportValue VPC2Id
       TargetType: instance
 
-# Application load balancer ############################3
 
+# Application load balancer ############################3
   WebServerLoadBalancer:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
