@@ -18,6 +18,34 @@ Resources:
         - Key: Name
           Value: FinsecureBastion2
 
+# RDS Instance (MYSQL) in private Subnet VPC1 ########################################################
+  RDSInstance:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBInstanceClass: db.t3.micro 
+      AllocatedStorage: "20"
+      DBName: MyDatabase
+      Engine: MySQL
+      MasterUsername: admin 
+      MasterUserPassword: password123
+      VPCSecurityGroups:
+        #- !Ref DatabaseSecurityGroup   
+        - !ImportValue DatabaseSecurityGroupId
+      DBSubnetGroupName: !Ref RDSSubnetGroup
+      MultiAZ: true
+      PubliclyAccessible: false 
+      StorageType: "gp2"
+
+       # RDS subnet group ########################################################
+  RDSSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: "Private Subnet Group for RDS"
+      SubnetIds:
+        #- !Ref PrivateSubnetVPC1RDS01    
+        #- !Ref PrivateSubnetVPC1RDS02    
+        - !ImportValue Rds01PrivateSubnetId 
+        - !ImportValue Rds02PrivateSubnetId
 
 # Launch template for web servers ######################################33
   webServersFinsecureTemplate:
@@ -47,7 +75,7 @@ Resources:
             # Create PHP file with database connection
             cat <<EOF > /var/www/html/PDOFsecure.php
             <?php
-            \$servername = "${RdsEndpointImport}";
+            \$servername = "${RDSInstance.Endpoint.Address}";
             \$username = "admin";
             \$password = "password123";
             \$dbname = "MyDatabase";
@@ -86,6 +114,7 @@ Resources:
             \$conn = null;
             ?>
             EOF
+
 
 
 
@@ -153,13 +182,6 @@ Resources:
       Port: 80
       Protocol: HTTP
 
-Parameters:
-#RDS enpoint import
-  RdsEndpointImport:
-    Type: String
-    Description: "RDS Endpoint Address"
-    Default: !ImportValue RdsEndpointExport
-
 
 ######################################################## Outputs  ########################################################
 
@@ -169,7 +191,11 @@ Outputs:
     Description: Public IP address of the Bastion instance
     Value: !GetAtt BastionServer.PublicIp
 
-
+  RDSInstanceEndpointValue:
+    Description: Endpoint of the RDS Instance
+    Value: !GetAtt RDSInstance.Endpoint.Address
+    Export:
+      Name: RdsEndpointExport
 
 
 
