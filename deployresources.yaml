@@ -18,7 +18,7 @@ Resources:
         - Key: Name
           Value: FinsecureBastion2
 
-# RDS Instance (MYSQL) in private Subnet VPC1 ########################################################
+# RDS Instance (MYSQL) in private Subnet VPC1   ########################################################
   RDSInstance:
     Type: AWS::RDS::DBInstance
     Properties:
