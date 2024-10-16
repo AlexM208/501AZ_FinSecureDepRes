@@ -53,7 +53,6 @@ Resources:
     Properties: 
       DBInstanceClass: db.t3.micro
       SourceDBInstanceIdentifier: !Ref RDSInstance 
-      DBSubnetGroupName: !Ref RDSSubnetGroup
       VPCSecurityGroups: 
         - !ImportValue DatabaseSecurityGroupId
       PubliclyAccessible: false
