@@ -47,6 +47,22 @@ Resources:
         - !ImportValue Rds01PrivateSubnetId 
         - !ImportValue Rds02PrivateSubnetId
 
+# RDS Read Replica Instance ########################################################
+  RDSReadReplica:
+    Type: AWS::RDS::DBInstance
+    Properties: 
+      DBInstanceClass: db.t3.micro
+      SourceDBInstanceIdentifier: !Ref RDSInstance 
+      DBSubnetGroupName: !Ref RDSSubnetGroup
+      VPCSecurityGroups: 
+        - !ImportValue DatabaseSecurityGroupId
+      PubliclyAccessible: false
+      StorageType: gp2
+      MultiAZ: false
+      AutoMinorVersionUpgrade: true
+      CopyTagsToSnapshot: true
+
+
 # Launch template for web servers ######################################33
   webServersFinsecureTemplate:
     Type: AWS::EC2::LaunchTemplate
@@ -116,8 +132,6 @@ Resources:
             EOF
 
 
-
-
 # Auto Scaling group ############################################
   WebServerASG:
     Type: AWS::AutoScaling::AutoScalingGroup
@@ -135,8 +149,6 @@ Resources:
       DesiredCapacity: 1
       TargetGroupARNs:
         - !Ref WebServerTargetGroup
-
-
 # Target group ############################################
   WebServerTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
@@ -153,8 +165,6 @@ Resources:
       Protocol: HTTP
       VpcId: !ImportValue VPC2Id
       TargetType: instance
-
-
 # Application load balancer ############################3
   WebServerLoadBalancer:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
