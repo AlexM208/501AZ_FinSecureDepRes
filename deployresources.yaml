@@ -3,7 +3,7 @@ Resources:
   BastionServer:
     Type: AWS::EC2::Instance
     Properties:
-      InstanceType: t3.small
+      InstanceType: t3.medium
       ImageId: ami-0888db1202897905c
       SubnetId: !ImportValue PublicSubnetVPC2BastionId
       SecurityGroupIds:
@@ -16,7 +16,7 @@ Resources:
             VolumeType: gp2      
       Tags:
         - Key: Name
-          Value: FinsecureBastion2
+          Value: FinsecureBastion
 
 # RDS Instance (MYSQL) in private Subnet VPC1   ########################################################
   RDSInstance:
