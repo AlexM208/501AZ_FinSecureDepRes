@@ -68,7 +68,7 @@ Resources:
     Properties:
       LaunchTemplateName: webServersFinsecureTemplate
       LaunchTemplateData: 
-        InstanceType: t3.small
+        InstanceType: t3.medium
         ImageId: ami-0866a3c8686eaeeba
         KeyName: vockey
         NetworkInterfaces:
@@ -115,7 +115,12 @@ Resources:
                 if (\$stmt->rowCount() > 0) {
                     echo "<table border='1'><tr><th>ID</th><th>Name</th><th>Encoding</th><th>Source</th><th>Link</th></tr>";
                     foreach (\$stmt->fetchAll() as \$row) {
-                        echo "<tr><td>" . \$row['Id'] . "</td><td>" . \$row['Name'] . "</td><td>" . \$row['Encoding'] . "</td><td>" . \$row['Source'] . "</td><td>" . \$row['Link'] . "</td></tr>";
+                        // Create a clickable link for the S3 URL
+                        echo "<tr><td>" . \$row['Id'] . "</td>
+                              <td>" . \$row['Name'] . "</td>
+                              <td>" . \$row['Encoding'] . "</td>
+                              <td>" . \$row['Source'] . "</td>
+                              <td><a href=\"" . \$row['Link'] . "\" target=\"_blank\">Open Link</a></td></tr>";
                     }
                     echo "</table>";
                 } else {
